@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LUCIFER TOOLS - Security Portal</title>
     <style>
+        /* Same as previous CSS */
         * {
             margin: 0;
             padding: 0;
@@ -33,7 +34,6 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* Left Panel - Login Form */
         .login-panel {
             flex: 1;
             padding: 60px 50px;
@@ -243,7 +243,6 @@
             font-weight: 600;
         }
 
-        /* Right Panel - Matrix Animation */
         .matrix-panel {
             flex: 1;
             background: #000;
@@ -292,7 +291,6 @@
             border: 1px solid #00E676;
         }
 
-        /* Responsive Design */
         @media (max-width: 900px) {
             .container {
                 flex-direction: column;
@@ -331,7 +329,6 @@
 </head>
 <body>
     <div class="container">
-        <!-- Left Panel - Login Form -->
         <div class="login-panel">
             <div class="logo">
                 <h1>LUCIFER</h1>
@@ -388,7 +385,6 @@
             </form>
         </div>
 
-        <!-- Right Panel - Matrix Animation -->
         <div class="matrix-panel">
             <div class="matrix-container">
                 <canvas id="matrixCanvas"></canvas>
@@ -422,17 +418,14 @@
         }
 
         function drawMatrix() {
-            // Semi-transparent black background for trail effect
             ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Matrix green color (same as your theme)
             ctx.font = `${fontSize}px 'Consolas', monospace`;
 
             for (let i = 0; i < drops.length; i++) {
                 const text = charArray[Math.floor(Math.random() * charArray.length)];
 
-                // Gradient effect - brighter at the top
                 const gradient = ctx.createLinearGradient(0, drops[i], 0, drops[i] + fontSize);
                 gradient.addColorStop(0, "#00E676");
                 gradient.addColorStop(0.5, "#00C853");
@@ -441,7 +434,6 @@
                 ctx.fillStyle = gradient;
                 ctx.fillText(text, i * fontSize, drops[i]);
 
-                // Reset drop when it reaches bottom
                 if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
                     drops[i] = 0;
                 }
@@ -449,7 +441,6 @@
             }
         }
 
-        // Resize canvas on window resize
         window.addEventListener('resize', () => {
             canvas.width = canvas.parentElement.clientWidth;
             canvas.height = canvas.parentElement.clientHeight;
@@ -459,10 +450,9 @@
             }
         });
 
-        // Animation loop
         setInterval(drawMatrix, 50);
 
-        // Form submission
+        // Form submission - FIXED VERSION
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
@@ -470,8 +460,12 @@
             const password = document.getElementById('password').value;
 
             if (username && password) {
-                // Send data to Python application
-                fetch('http://localhost:8080/verify', {
+                // Disable form
+                document.querySelector('.login-btn').disabled = true;
+                document.querySelector('.login-btn').textContent = "VERIFYING...";
+
+                // Send verification request
+                fetch('http://localhost:5000/verify', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -484,29 +478,34 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // Show success message
-                        document.querySelector('.login-title').textContent = "ACCESS GRANTED!";
-                        document.querySelector('.login-subtitle').textContent = "Launching Application...";
-                        document.getElementById('loginForm').style.display = 'none';
+                        // Success - show message and redirect
+                        document.querySelector('.login-title').textContent = "✅ ACCESS GRANTED!";
+                        document.querySelector('.login-subtitle').textContent = data.message;
+                        document.querySelector('.login-btn').style.display = 'none';
 
-                        // Countdown
-                        let count = 3;
-                        const countdown = setInterval(() => {
-                            document.querySelector('.login-subtitle').textContent = `Launching in ${count}...`;
-                            count--;
-                            if (count < 0) {
-                                clearInterval(countdown);
-                                // Close browser window after login
-                                window.close();
-                            }
-                        }, 1000);
+                        // Store login info
+                        localStorage.setItem('lucifer_auth', JSON.stringify({
+                            user: username,
+                            license: data.license_type,
+                            timestamp: Date.now()
+                        }));
+
+                        // Open main application
+                        setTimeout(() => {
+                            window.location.href = 'http://localhost:5000/launch';
+                        }, 2000);
                     } else {
-                        alert('ACCESS DENIED: ' + data.message);
+                        // Error
+                        alert('❌ ACCESS DENIED: ' + data.message);
+                        document.querySelector('.login-btn').disabled = false;
+                        document.querySelector('.login-btn').textContent = "UNLOCK ACCESS";
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Connection error. Make sure Python app is running.');
+                    alert('⚠️ Connection error. Make sure Python app is running on port 5000.');
+                    document.querySelector('.login-btn').disabled = false;
+                    document.querySelector('.login-btn').textContent = "UNLOCK ACCESS";
                 });
             } else {
                 alert('Please fill in both name and key');
@@ -522,6 +521,15 @@
 
         // Focus on name field on load
         document.getElementById('username').focus();
+
+        // Auto-check if already logged in
+        if (localStorage.getItem('lucifer_auth')) {
+            const auth = JSON.parse(localStorage.getItem('lucifer_auth'));
+            if (Date.now() - auth.timestamp < 3600000) { // 1 hour validity
+                document.getElementById('username').value = auth.user;
+                document.querySelector('.login-subtitle').textContent = "Welcome back! Click UNLOCK ACCESS";
+            }
+        }
     </script>
 </body>
 </html>
