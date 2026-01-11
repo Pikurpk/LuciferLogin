@@ -296,11 +296,11 @@
                 flex-direction: column;
                 max-width: 500px;
             }
-
+            
             .matrix-panel {
                 height: 300px;
             }
-
+            
             .contact-buttons {
                 flex-wrap: wrap;
             }
@@ -310,15 +310,15 @@
             .login-panel {
                 padding: 40px 30px;
             }
-
+            
             .logo h1 {
                 font-size: 28px;
             }
-
+            
             .login-title {
                 font-size: 24px;
             }
-
+            
             .contact-btn {
                 padding: 10px 15px;
                 font-size: 12px;
@@ -425,12 +425,12 @@
 
             for (let i = 0; i < drops.length; i++) {
                 const text = charArray[Math.floor(Math.random() * charArray.length)];
-
+                
                 const gradient = ctx.createLinearGradient(0, drops[i], 0, drops[i] + fontSize);
                 gradient.addColorStop(0, "#00E676");
                 gradient.addColorStop(0.5, "#00C853");
                 gradient.addColorStop(1, "#00B359");
-
+                
                 ctx.fillStyle = gradient;
                 ctx.fillText(text, i * fontSize, drops[i]);
 
@@ -455,15 +455,15 @@
         // Form submission - FIXED VERSION
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
-
+            
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-
+            
             if (username && password) {
                 // Disable form
                 document.querySelector('.login-btn').disabled = true;
                 document.querySelector('.login-btn').textContent = "VERIFYING...";
-
+                
                 // Send verification request
                 fetch('http://localhost:5000/verify', {
                     method: 'POST',
@@ -482,14 +482,14 @@
                         document.querySelector('.login-title').textContent = "✅ ACCESS GRANTED!";
                         document.querySelector('.login-subtitle').textContent = data.message;
                         document.querySelector('.login-btn').style.display = 'none';
-
+                        
                         // Store login info
                         localStorage.setItem('lucifer_auth', JSON.stringify({
                             user: username,
                             license: data.license_type,
                             timestamp: Date.now()
                         }));
-
+                        
                         // Open main application
                         setTimeout(() => {
                             window.location.href = 'http://localhost:5000/launch';
@@ -521,7 +521,7 @@
 
         // Focus on name field on load
         document.getElementById('username').focus();
-
+        
         // Auto-check if already logged in
         if (localStorage.getItem('lucifer_auth')) {
             const auth = JSON.parse(localStorage.getItem('lucifer_auth'));
